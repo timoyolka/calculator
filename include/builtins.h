@@ -20,6 +20,7 @@ MathFuncN get_function(const char *name);
 int f_exists(const char *name);
 
 double f_sin(const double *args, int argc);
+double f_ln(const double *args, int argc);
 double f_log(const double *args, int argc);
 double f_pow(const double *args, int argc);
 double f_cos(const double *args, int argc);

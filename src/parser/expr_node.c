@@ -37,16 +37,15 @@ ExprNode* create_operator_node(char op, ExprNode *left, ExprNode *right)
   return node;
 }
 
-ExprNode* create_function_node(const char *name, ExprNode *arg)
+ExprNode* create_function_node(const char *name, ExprNode *arg1, ExprNode *arg2)
 {
   ExprNode *node = malloc(sizeof(ExprNode));
   if (!node) { return NULL; }
   
   node->type = NODE_FUNCTION;
   node->value.name = strdup(name);  // copy function name
-  node->left = arg;
-  node->right = NULL;                   // functions are unary
-  
+  node->left = arg1 ? arg1 : NULL;
+  node->right = arg2 ? arg2 : NULL;                   // functions are unary  
   return node;
 }
 
@@ -57,8 +56,8 @@ ExprNode* create_unary_op_node(char op, ExprNode *child)
   
   node->type = NODE_UNARY;
   node->value.operator = op;
-  node->left = child;
-  node->right = NULL;
+  node->left = NULL;
+  node->right = child;
 
   return node;
 }

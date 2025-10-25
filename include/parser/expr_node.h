@@ -33,7 +33,7 @@ ExprNode* create_number_node(double value);
 ExprNode* create_variable_node(const char *name);
 ExprNode* create_operator_node(char op, ExprNode *left, ExprNode *right);
 ExprNode* create_unary_op_node(char op, ExprNode *child);
-ExprNode* create_function_node(const char *name, ExprNode *arg);
+ExprNode* create_function_node(const char *name, ExprNode *arg1, ExprNode *arg2);
 ExprNode* create_error_node(ExprNode *left, ExprNode *right, const char *err, ...);
 
 

@@ -5,6 +5,7 @@ const char *TOKEN_TYPE_NAMES[] = {
   [TOKEN_OPERATOR] = "OPERATOR",
   [TOKEN_LPAREN]   = "LPAREN",
   [TOKEN_RPAREN]   = "RPAREN",
+  [TOKEN_COMMA]    = "COMMA",
   [TOKEN_FUNCTION] = "FUNCTION",
   [TOKEN_VARIABLE] = "VARIABLE",
   [TOKEN_END]      = "EXPR_END",
@@ -147,6 +148,10 @@ Token get_next_token(LexerState *l)
       advance(l);
       return token;
     }
+  if(current_char == COMMA) {
+    token.type = TOKEN_COMMA;
+    token.value.text = text;
+  }
 
   if(current_char == ADD || current_char == SUB ||current_char == MULT ||
      current_char == DIV || current_char == POW) {

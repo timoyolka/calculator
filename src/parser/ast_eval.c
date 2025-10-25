@@ -60,10 +60,10 @@ double eval_unary_op_node(ExprNode *n)
   switch(n->value.operator)
     {
     case ADD:
-      return eval_tree(n->left);
+      return eval_tree(n->right);
       break;
     case SUB:
-      return -eval_tree(n->left);
+      return -eval_tree(n->right);
       break;
     default:
       fprintf(stderr, "Evaluation error: unknown unary operator '%c'\n", n->value.operator);
@@ -80,6 +80,10 @@ double eval_function_node(ExprNode *n)
       fprintf(stderr, "Unknown function: %s\n", n->value.name);
       return 0.0;
     }
-  double arg = eval_tree(n->left);
-  return func(&arg, 1);
+  int argc = 0;
+  double argv[2];
+  if(n->left) argv[argc++] = eval_tree(n->left);
+  if(n->right) argv[argc++] = eval_tree(n->right);
+  
+  return func(argv, argc);
 }

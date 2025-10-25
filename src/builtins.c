@@ -5,7 +5,7 @@ static const FunctionEntry FUNCTIONS[] = {
     {"cos",  f_cos},
     {"tan",  f_tan},
     {"log",  f_log},
-    {"ln",   f_log},   /* alias for natural log */
+    {"ln",   f_ln},   /* alias for natural log */
     {"pow",  f_pow},
     {"sqrt", f_sqrt},
     {NULL, NULL}       /* sentinel */
@@ -44,11 +44,24 @@ double f_sin(const double *args, int argc)
   return sin(args[0]);
 }
 
+double f_ln(const double *args, int argc)
+{
+    if(argc != 1) return NAN;
+    if(args[0] <= 0) return NAN;
+    return log(args[0]);  // natural log
+}
+
 double f_log(const double *args, int argc)
 {
-  if (argc == 1) return log(args[0]);        // natural log
-  if (argc == 2) return log(args[0]) / log(args[1]); // log base n
-  return NAN;
+    if(argc == 1) {           // log base 10
+        if(args[0] <= 0) return NAN;
+        return log10(args[0]);
+    }
+    if(argc == 2) {           // log(base, number)
+        if(args[0] <= 0 || args[0] == 1 || args[1] <= 0) return NAN;
+        return log10(args[1]) / log10(args[0]);
+    }
+    return NAN;
 }
 
 double f_pow(const double *args, int argc)

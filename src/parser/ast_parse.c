@@ -11,16 +11,14 @@ ExprNode* parse_expression(ParserState *p)
   while(tok &&
 	tok->type != TOKEN_END &&
 	tok->type == TOKEN_OPERATOR &&
-	(*tok->value.text == ADD || *tok->value.text == SUB))
-    {
+	(*tok->value.text == ADD || *tok->value.text == SUB)) {
       //Remember the operator(+ or -)
       char op = *tok->value.text;
       advance_parser(p);
 
       //Parse the next token(right side to this operator)
       ExprNode *right = parse_term(p);
-      if (!right)
-	{
+      if (!right) {
 	  return create_error_node(left, NULL,
 				   "Syntax error: expected term after '%c' at token number: %zu\n",
 				   op, p->count);
@@ -45,17 +43,15 @@ ExprNode* parse_term(ParserState *p)
 
   Token *tok = current(p);
 
-  while (tok && tok->type != TOKEN_END)
-    {
+  while (tok && tok->type != TOKEN_END) {
       //Explicit multiplication or division
-      if (tok->type == TOKEN_OPERATOR && (*tok->value.text == MULT || *tok->value.text == DIV))
-        {
+      if (tok->type == TOKEN_OPERATOR &&
+	  (*tok->value.text == MULT || *tok->value.text == DIV)) {
 	  char op = *tok->value.text;
 	  advance_parser(p);
 
 	  ExprNode *right = parse_factor(p);
-	  if (!right)
-            {
+	  if (!right) {
 	      return create_error_node(left, NULL,
 				       "Syntax error: expected term after '%c' at token number: %zu\n",
 				       op, p->count);
@@ -68,18 +64,14 @@ ExprNode* parse_term(ParserState *p)
       else if (tok->type == TOKEN_NUMBER ||
 	       tok->type == TOKEN_VARIABLE ||
 	       tok->type == TOKEN_FUNCTION ||
-	       tok->type == TOKEN_LPAREN)
-        {
+	       tok->type == TOKEN_LPAREN) {
 	  ExprNode *right = parse_factor(p);
-	  if (!right)
-            {
+	  if (!right) {
 	      return create_error_node(left, NULL,
 				       "Syntax error: expected term after implicit '*'");
             }
 	  left = create_operator_node(MULT, left, right);
-        }
-      else
-        {
+        } else {
 	  break;
         }
 
@@ -98,17 +90,14 @@ ExprNode* parse_factor(ParserState *p)
   if(tok &&
      tok->type != TOKEN_END &&
      tok->type == TOKEN_OPERATOR &&
-     (*tok->value.text == ADD || *tok->value.text == SUB))
-    {
+     (*tok->value.text == ADD || *tok->value.text == SUB)) {
       //Rember the operator and consume the token
       char op = *tok->value.text;
       advance_parser(p);
 
       //Since this function handle unary operation, needs only one child, unary operation are right-associative
       ExprNode *child = parse_factor(p);
-      //ExprNode *zero = create_number_node(0); Previous handling by adding 0 node
-      if (!child)
-	{
+      if (!child) {
 	  return create_error_node(NULL, NULL,
 				   "Syntax error: expected term after '%c' at token number: %zu\n",
 				   op, p->count);
@@ -132,16 +121,14 @@ ExprNode* parse_power(ParserState *p)
   //Check weather the current token is a ^
   if(tok->type != TOKEN_END &&
      tok->type == TOKEN_OPERATOR &&
-     *tok->value.text == POW)
-    {
+     *tok->value.text == POW) {
       //Consume the token
       advance_parser(p);
 
       //Power is a binary operator, so create the subtree for chain powers -? x^x^x^...
       ExprNode *right = parse_power(p);
 
-      if (!right)
-	{	 
+      if (!right) {	 
 	  return create_error_node(NULL, NULL,
 				   "Syntax error: expected right-hand side after '^' at token number: %zu\n",
 				   p->count);
@@ -159,22 +146,19 @@ ExprNode* parse_primary(ParserState *p)
   if(tok->type == TOKEN_END) { return NULL; }
 
   //Number
-  if(tok->type == TOKEN_NUMBER)
-    {
+  if(tok->type == TOKEN_NUMBER) {
       advance_parser(p);
       return create_number_node(tok->value.number);
     }
 
   //variable
-  if(tok->type == TOKEN_VARIABLE)
-    {
+  if(tok->type == TOKEN_VARIABLE) {
       advance_parser(p);
       return create_variable_node(tok->value.text);
     }
 
   //Function
-  if(tok->type == TOKEN_FUNCTION)
-    {
+  if(tok->type == TOKEN_FUNCTION) {
       //Remember the function name
       char *fname = tok->value.text;
 
@@ -182,8 +166,7 @@ ExprNode* parse_primary(ParserState *p)
       advance_parser(p);
       tok = current(p);
 
-      if(!tok || tok->type != TOKEN_LPAREN)
-	{
+      if(!tok || tok->type != TOKEN_LPAREN) {
 	  return create_error_node(NULL, NULL,
 				   "Syntax error: expected '(' after function '%s' at token number: %zu\n",
 				   fname, p->count);
@@ -193,46 +176,48 @@ ExprNode* parse_primary(ParserState *p)
       advance_parser(p);
 
       //Build a subtree for the argument expression of the function
-      ExprNode *arg = parse_expression(p);
-      if(!arg)
-	{
+      ExprNode *arg1 = parse_expression(p);
+      if(!arg1) {
 	  return create_error_node(NULL, NULL,
 			   "Syntax error: invalid expression in function '%s' argument at token %zu\n",
 			   fname, p->count);
 	}
 
-      //Move to ')'
+      //Move to ',' or ')'
+      tok = current(p);
+      ExprNode *arg2 = NULL;
+
+      if(tok && tok->type == TOKEN_COMMA) {
+	advance_parser(p);
+	arg2 = parse_expression(p);
+	if(!arg2)
+	  return create_error_node(NULL, NULL, "Invalid second argument in function '%s'", fname);
+      }
+      
       tok = current(p);
 
       //Advance to the next token, unless the syntax is not correct, and the function arguments are not closed by ')'
-      if(tok && tok->type == TOKEN_RPAREN)
-	{
-	  advance_parser(p);
-	}
-      else
-	{
-	  return create_error_node(NULL, NULL,
-				   "Syntax error: expected ')' after function argument at token number: %zu\n",
-				   p->count);
-	}
+      if(!tok || tok->type != TOKEN_RPAREN) {
+		return create_error_node(NULL, NULL,
+				 "Syntax error: expected ')' after function argument at token number: %zu\n",
+				 p->count);
+      }
+      
+      advance_parser(p);
 
 
-      return create_function_node(fname, arg);
+      return create_function_node(fname, arg1, arg2);
     }
   
   //In case of parenthesses
-  if(tok->type == TOKEN_LPAREN)
-    {
+  if(tok->type == TOKEN_LPAREN) {
       //Move forward and build a subtree for the expression inside the parenthesses
       advance_parser(p);
       ExprNode *node = parse_expression(p);
       tok = current(p);
-      if(tok && tok->type == TOKEN_RPAREN)
-	{
+      if(tok && tok->type == TOKEN_RPAREN) {
 	  advance_parser(p);
-	}
-      else
-	{
+      } else {
 	  return create_error_node(NULL, NULL,
 				   "Syntax error: expected ')' after function argument at token number: %zu\n",
 				   p->count);

@@ -1,8 +1,9 @@
 #ifndef TOKEN_TYPES_H
 #define TOKEN_TYPES_H
 
-	#define LPAREN '('
-	#define RPAREN ')'
+       #define LPAREN '('
+       #define RPAREN ')'
+       #define COMMA ','
 
 	#define ADD '+'
 	#define SUB '-'
@@ -18,6 +19,7 @@
 		TOKEN_OPERATOR,    // +, -, *, /, ^
 		TOKEN_LPAREN,      // (
 		TOKEN_RPAREN,      // )
+		TOKEN_COMMA,
 		TOKEN_FUNCTION,    // sin, cos, sqrt, etc.
 		TOKEN_VARIABLE,    // optional, e.g. x
 		TOKEN_END,         // end of expression / string terminator
