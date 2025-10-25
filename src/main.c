@@ -1,0 +1,45 @@
+#include "lexer/lexer_api.h"
+#include "parser/ast_parse.h"
+#include "parser/ast_eval.h"
+#include "parser/ast_printer.h"
+
+int main(int argc, char *argv[])
+{ 
+  if(argc < 2)
+    {
+      printf("No argument was given!\n");
+      return 1;
+    }
+  else if(argc > 2)
+    {
+      printf("Too many arguments!\n");
+      return 1;
+    }
+  
+  printf("NOTE: math expression should be passed with double quotes.\n");
+  char *math_expression = argv[1];
+  TokenNode *head = lex_expr(math_expression);
+
+  print_tokens(head);
+
+  ParserState *p = malloc(sizeof(ParserState));
+  init_parser(p, head);
+
+
+  ExprNode *root = parse_expression(p);
+
+  if(!root)
+    {
+      printf("Parsing failed or empty expression\n");
+    }
+  else
+    {
+      printf("Expression tree:\n");
+      print_tree_pyramid(root);
+    }
+  
+  double result = eval_tree(root);
+  printf("%s = %f\n", math_expression, result);
+  
+  free_expr_tree(root);
+}

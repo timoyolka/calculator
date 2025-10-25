@@ -1,0 +1,53 @@
+#ifndef LEXER_H
+#define LEXER_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#include "lexer_state_struct.h"
+#include "token_struct.h"
+#include "builtins.h"
+
+//Intializes a new tokenizer for a new expression
+LexerState* init_lexer(const char *expr);
+
+//Gets the current token
+char get_current(LexerState *l);
+
+//Advances the tokenizers position
+void advance(LexerState *l);
+void advance_offset(LexerState *l, size_t offset);
+
+//Peeks the char with the specified offset without taking in acount the white spaces
+char peek_nonspace_char(LexerState *l, size_t offset);
+
+//Skips all heading whitespace
+void skip_space(LexerState *l);
+
+//Converts a single char into a null terminated string(In favour of the token value member)
+char* char_to_string(char c);
+
+//Analyzes the current identifier, advances the tokens position and returns a ready token
+Token get_next_token(LexerState *l);
+
+//Converts token type into a string literal
+void token_to_string(const Token *t, char *buf, size_t size);
+
+//Tokenize the given math expression
+TokenNode* lex_expr(const char *math_expression);
+
+//Counts the number of tokens
+size_t count_tokens(TokenNode* head, int (*predicate)(TokenNode*, TokenType), TokenType type);
+
+//Is TokenNode of some type
+int is_type(TokenNode *head, TokenType type);
+
+
+//Prints the tokens linked list
+void print_tokens(TokenNode *root);
+
+
+
+#endif

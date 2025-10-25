@@ -1,0 +1,6 @@
+#ifndef TOKENIZER_CONFIG_H
+#define TOKENIZER_CONFIG_H
+
+#define MAX_IDENT_LEN 5
+
+#endif
