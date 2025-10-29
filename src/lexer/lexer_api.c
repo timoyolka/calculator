@@ -78,9 +78,9 @@ char* char_to_string(char c)
 }
 
 
-Token get_next_token(LexerState *l)
+CalcToken get_next_token(LexerState *l)
 {
-  Token token = {0}; //initialize
+  CalcToken token = {0}; //initialize
 
   if(!l || l->pos >= l->length) {
       token.type = TOKEN_END;
@@ -115,11 +115,11 @@ Token get_next_token(LexerState *l)
       return token;
     }
 
-  if (isdigit((unsigned char)current_char) || current_char == '.') {
+  if (isdigit((unsigned char)current_char) || current_char == DOT) {
       char buffer[MAX_IDENT_LEN];
       int len = 0;
 
-      while ((isdigit((unsigned char)current_char) || current_char == '.') && len < MAX_IDENT_LEN - 1) {
+      while ((isdigit((unsigned char)current_char) || current_char == DOT) && len < MAX_IDENT_LEN - 1) {
 	  buffer[len++] = current_char;
 	  advance(l);
 	  current_char = l->expr[l->pos];
@@ -151,8 +151,9 @@ Token get_next_token(LexerState *l)
   if(current_char == COMMA) {
     token.type = TOKEN_COMMA;
     token.value.text = text;
+    advance(l);
+    return token;
   }
-
   if(current_char == ADD || current_char == SUB ||current_char == MULT ||
      current_char == DIV || current_char == POW) {
       token.type = TOKEN_OPERATOR;
@@ -167,7 +168,7 @@ Token get_next_token(LexerState *l)
 
 
 
-void token_to_string(const Token *t, char *buf, size_t size)
+void token_to_string(const CalcToken *t, char *buf, size_t size)
 {
     const char *token_type = TOKEN_TYPE_NAMES[t->type];
     const char *text_val = NULL;
@@ -186,16 +187,16 @@ void token_to_string(const Token *t, char *buf, size_t size)
 
 
 
-TokenNode *lex_expr(const char *math_expression)
+CalcTokenNode *lex_expr(const char *math_expression)
 {
   LexerState *t = init_lexer(math_expression);
-  Token tok = get_next_token(t);
+  CalcToken tok = get_next_token(t);
   
-  TokenNode *root = NULL;
-  TokenNode *curr = NULL;
+  CalcTokenNode *root = NULL;
+  CalcTokenNode *curr = NULL;
 
   while(tok.type != TOKEN_END) {
-      TokenNode *new_node = malloc(sizeof(TokenNode));
+      CalcTokenNode *new_node = malloc(sizeof(CalcTokenNode));
       new_node->t = tok;      // copy token struct
       new_node->next = NULL;
       
@@ -209,7 +210,7 @@ TokenNode *lex_expr(const char *math_expression)
       
       tok = get_next_token(t);
     }
-  TokenNode *last = malloc(sizeof(TokenNode));
+  CalcTokenNode *last = malloc(sizeof(CalcTokenNode));
   last->t = tok;
   last->next = NULL;
   if(curr)
@@ -222,29 +223,9 @@ TokenNode *lex_expr(const char *math_expression)
   return root;
 }
 
-
-size_t count_tokens(TokenNode* head, int (*predicate)(TokenNode*, TokenType), TokenType type)
+void print_tokens(CalcTokenNode *root)
 {
-  if(!head) { return 0; }
-  
-  size_t count = 0;
-  TokenNode *curr = head;
-  while(curr != NULL) {
-      if(predicate == NULL ? 1 : predicate(curr, type))
-	 count++;
-      curr = curr->next;
-    }
-  return count;
-}
-
-int is_type(TokenNode *head, TokenType type)
-{
-  return head->t.type == type;
-}
-
-void print_tokens(TokenNode *root)
-{
-  TokenNode *curr = root;
+  CalcTokenNode *curr = root;
   size_t buffer_size = 32;
   char *buffer = malloc(buffer_size * sizeof(char));
   while(curr != NULL) {

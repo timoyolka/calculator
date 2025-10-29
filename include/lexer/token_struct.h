@@ -6,18 +6,18 @@
 
 typedef struct
 {
-  TokenType type;
+  CalcTokenType type;
   union
   {
     char *text;
     double number;
   }value;
-}Token;
+}CalcToken;
 
-typedef struct TokenNode
+typedef struct CalcTokenNode
 {
-  Token t;
-  struct TokenNode *next;
-}TokenNode;
+  CalcToken t;
+  struct CalcTokenNode *next;
+}CalcTokenNode;
 
 #endif

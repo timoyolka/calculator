@@ -5,10 +5,11 @@ static const FunctionEntry FUNCTIONS[] = {
     {"cos",  f_cos},
     {"tan",  f_tan},
     {"log",  f_log},
-    {"ln",   f_ln},   /* alias for natural log */
+    {"ln",   f_ln},
     {"pow",  f_pow},
     {"sqrt", f_sqrt},
-    {NULL, NULL}       /* sentinel */
+    {"abs", f_abs},
+    {NULL, NULL}
 };
 
 
@@ -87,4 +88,10 @@ double f_sqrt(const double *args, int argc)
 {
   if (argc != 1) return NAN;
   return sqrt(args[0]);
+}
+
+double f_abs(const double *args, int argc)
+{
+  if(argc != 1) return NAN;
+  return fabs(args[0]);
 }

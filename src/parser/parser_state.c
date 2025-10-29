@@ -1,6 +1,6 @@
 #include "parser/parser_state.h"
 
-void init_parser(ParserState *p, TokenNode *head)
+void init_parser(ParserState *p, CalcTokenNode *head)
 {
   if(!p) { return; }
   p->current = head;
@@ -8,7 +8,7 @@ void init_parser(ParserState *p, TokenNode *head)
 }
 
 //Parser state control functions
-Token* current(const ParserState *p)
+CalcToken* current(const ParserState *p)
 {
   if(p->current)
     return &p->current->t;

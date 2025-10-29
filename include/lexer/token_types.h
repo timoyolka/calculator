@@ -4,6 +4,7 @@
        #define LPAREN '('
        #define RPAREN ')'
        #define COMMA ','
+       #define DOT '.'
 
 	#define ADD '+'
 	#define SUB '-'
@@ -19,12 +20,12 @@
 		TOKEN_OPERATOR,    // +, -, *, /, ^
 		TOKEN_LPAREN,      // (
 		TOKEN_RPAREN,      // )
-		TOKEN_COMMA,
+		TOKEN_COMMA,       // ,
 		TOKEN_FUNCTION,    // sin, cos, sqrt, etc.
 		TOKEN_VARIABLE,    // optional, e.g. x
 		TOKEN_END,         // end of expression / string terminator
 		TOKEN_ERR
-	  }TokenType;
+	  }CalcTokenType;
 
 	extern const char *TOKEN_TYPE_NAMES[];
 

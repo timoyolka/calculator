@@ -6,17 +6,18 @@
 #include "builtins.h"
 
 typedef struct {
-  TokenNode *current;
+  CalcTokenNode *current;
   size_t count;
 }ParserState;
 
 //Initializes the parser
-void init_parser(ParserState *p, TokenNode *head);
+void init_parser(ParserState *p, CalcTokenNode *head);
 
 //Gets the current term's token
-Token* current(const ParserState *p);
+CalcToken* current(const ParserState *p);
 
 //Consumes the current token
 void advance_parser(ParserState *p);
+
 
 #endif

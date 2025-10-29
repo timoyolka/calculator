@@ -30,23 +30,20 @@ void skip_space(LexerState *l);
 char* char_to_string(char c);
 
 //Analyzes the current identifier, advances the tokens position and returns a ready token
-Token get_next_token(LexerState *l);
+CalcToken get_next_token(LexerState *l);
 
 //Converts token type into a string literal
-void token_to_string(const Token *t, char *buf, size_t size);
+void token_to_string(const CalcToken *t, char *buf, size_t size);
 
 //Tokenize the given math expression
-TokenNode* lex_expr(const char *math_expression);
-
-//Counts the number of tokens
-size_t count_tokens(TokenNode* head, int (*predicate)(TokenNode*, TokenType), TokenType type);
+CalcTokenNode* lex_expr(const char *math_expression);
 
 //Is TokenNode of some type
-int is_type(TokenNode *head, TokenType type);
+int is_type(CalcTokenNode *head, CalcTokenType type);
 
 
 //Prints the tokens linked list
-void print_tokens(TokenNode *root);
+void print_tokens(CalcTokenNode *root);
 
 
 

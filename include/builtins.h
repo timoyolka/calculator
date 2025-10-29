@@ -26,5 +26,6 @@ double f_pow(const double *args, int argc);
 double f_cos(const double *args, int argc);
 double f_tan(const double *args, int argc);
 double f_sqrt(const double *args, int argc);
+double f_abs(const double *args, int argc);
 
 #endif

@@ -4,7 +4,7 @@ ExprNode* parse_expression(ParserState *p)
 {
   //Parse the leftmost token, consumes the token
   ExprNode *left = parse_term(p);
-  Token *tok = current(p);
+  CalcToken *tok = current(p);
   if(!tok) { return NULL; }
 
   //While the next token is + or -
@@ -41,7 +41,7 @@ ExprNode* parse_term(ParserState *p)
   ExprNode *left = parse_factor(p);
   if (!left) return NULL;
 
-  Token *tok = current(p);
+  CalcToken *tok = current(p);
 
   while (tok && tok->type != TOKEN_END) {
       //Explicit multiplication or division
@@ -84,7 +84,7 @@ ExprNode* parse_term(ParserState *p)
 
 ExprNode* parse_factor(ParserState *p)
 {
-  Token *tok = current(p);
+  CalcToken *tok = current(p);
 
   //Check weather the current token is a + or -
   if(tok &&
@@ -115,7 +115,7 @@ ExprNode* parse_power(ParserState *p)
   ExprNode *left = parse_primary(p);
   if (!left) { return NULL; }
 
-  Token *tok = current(p);
+  CalcToken *tok = current(p);
   if(!tok) { return NULL; }
 
   //Check weather the current token is a ^
@@ -141,7 +141,7 @@ ExprNode* parse_power(ParserState *p)
 
 ExprNode* parse_primary(ParserState *p)
 {
-  Token *tok = current(p);
+  CalcToken *tok = current(p);
   if(!tok) { return NULL; }
   if(tok->type == TOKEN_END) { return NULL; }
 
@@ -224,6 +224,7 @@ ExprNode* parse_primary(ParserState *p)
 	}
       return node;
     }
+  
   return create_error_node(NULL, NULL,
 			   "Syntax error: unexpected token in parse_primary at token number: %zu\n",
 			   p->count);
