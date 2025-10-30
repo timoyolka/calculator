@@ -3,8 +3,16 @@
 #include "parser/ast_eval.h"
 #include "parser/ast_printer.h"
 
+
+/* 
+  General notes:
+  1. your synax convetions are weird, they are not consistent which makes it hard to follow and read the code.
+  2.  
+*/
 int main(int argc, char *argv[])
 { 
+  // It would be better if you used an enum
+  // and argc != 2 with `printf("Calculator.exe <Expresion>")`
   if(argc < 2)
     {
       printf("No argument was given!\n");

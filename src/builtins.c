@@ -25,6 +25,7 @@ MathFuncN get_function(const char *name)
     return NULL;
 }
 
+//Bad name
 int f_exists(const char *name)
 {
   if(!name)
