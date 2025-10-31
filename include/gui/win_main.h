@@ -6,8 +6,8 @@
 #endif
 
 #include <windows.h>
-#include <wchar.h>
 
+#include "gui/winapi_utils.h"
 #include "lexer/lexer_api.h"
 #include "parser/ast_parse.h"
 #include "parser/ast_eval.h"
@@ -87,16 +87,81 @@
 
 #define DISPLAY_BUFF_SIZE 256
 
-#define IDC_DISPLAY 101
+#define IDC_DISPLAY 2
+
+typedef struct buttonTag {
+  int id;
+  wchar_t *name;
+}buttonTag;
+
+typedef enum{
+  IDC_BUTTON_EQULA = 1000, 
+  IDC_BUTTON_SHIFT, 
+  IDC_BUTTON_OPTION, 
+  IDC_BUTTON_MENU,
+  IDC_BUTTON_EXIT, 
+  IDC_BUTTON_POWER, 
+  IDC_BUTTON_VAR, 
+  IDC_BUTTON_LOG, 
+  IDC_BUTTON_LN, 
+  IDC_BUTTON_SIN, 
+  IDC_BUTTON_COS, 
+  IDC_BUTTON_TAN, 
+  IDC_BUTTON_ROOT, 
+  IDC_BUTTON_LPAREN, 
+  IDC_BUTTON_RPAREN, 
+  IDC_BUTTON_ANS
+}panelButtonId;
+
+typedef enum{
+  IDC_BUTTON_MULT = IDC_BUTTON_ANS + 1,
+  IDC_BUTTON_DIV,
+  IDC_BUTTON_PLUS,
+  IDC_BUTTON_MINUS,
+  IDC_BUTTON_DEL,
+}opButtonId;
+
+typedef enum{
+  IDC_BUTTON_ZERO = IDC_BUTTON_DEL + 1,
+  IDC_BUTTON_ONE,
+  IDC_BUTTON_TWO,
+  IDC_BUTTON_THREE,
+  IDC_BUTTON_FOUR,
+  IDC_BUTTON_FIVE,
+  IDC_BUTTON_SIX,
+  IDC_BUTTON_SEVEN,
+  IDC_BUTTON_EIGHT,
+  IDC_BUTTON_NINE
+}numPadButtonId;
+
+#define BUTTON_N (IDC_BUTTON_NINE - IDC_BUTTON_EQULA)
+
+typedef struct{
+  HWND *panel;
+  HWND *op;
+  HWND *num_pad;
+}buttonContainer;
+
+typedef struct{
+  HWND hwnd;
+  WNDPROC hWndOldProc;
+}WindowData;
+  
+#define IDC_BUTTON_PI 400
+#define IDC_BUTTON_EULER 401
+#define IDC_BUTTON_GOLDEN_RATION 402
 
 
-//Create a console instance for debugging
-void create_console_instance();
-//Convert wide char string(wchar_t *) into multibyte string(char *)
-char* convert_wchar_to_char(const wchar_t *wbuf);
-//Main window process
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-//Child window process
-LRESULT CALLBACK EditSubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+#define WC_FLAG_DEBUG_CONSOLE L"-debug_console"
+
+WindowData CreateChildWnd(WNDPROC newProc, LPCWSTR lpClassName, LPCWSTR lpWindowName, LPCWSTR wndTxt, DWORD dwExStyle, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam);
+
+//Main windows -> Display, Numpad, FuncPad, OpPad
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); //Main window process
+LRESULT CALLBACK EditDisplaySubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam); //Child window display process
+//LRESULT CALLBACK NumPadSubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) //Child NumPad process
+
+  
 #endif

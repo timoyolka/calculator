@@ -1,61 +1,48 @@
 #include "gui/win_main.h"
 
-static HWND h_edit_calc_input;
-static WNDPROC old_edit_calc_proc = NULL;
+WindowData display_wnd = {
+  .hwnd = NULL,
+  .hWndOldProc = NULL
+};
 
-
-void create_console_instance()
+WindowData CreateChildWnd(WNDPROC newProc,
+			  LPCWSTR lpClassName,  LPCWSTR lpWindowName, LPCWSTR wndTxt,
+			  DWORD dwExStyle, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)
 {
-  //Create a new console window
-  AllocConsole();
-
-  //Reroute the stdio to the new console instance
-  FILE *fp;
-  freopen_s(&fp, "CONOUT$", "w", stdout);
-  freopen_s(&fp, "CONOUT$", "w", stderr);
-  freopen_s(&fp, "CONOUT$", "r", stdin);
-
-  printf("Debug console initialized.\n");
-}
-
-char* convert_wchar_to_char(const wchar_t *wbuf)
-{
-  //get required buffer size (in bytes, including terminating NUL)
-  int needed = WideCharToMultiByte(
-				   CP_UTF8, //Target encoding
-				   0,       //Conversion options
-				   wbuf,    //src wchar_t* string
-				   -1,      //src string len
-				   NULL,    //dest buf(NULL to get size)
-				   0,       //dest buf size
-				   NULL,    //replcement char if fails
-				   NULL     //output flag
-				   );
-  if (needed == 0) {
-    DWORD err = GetLastError();
-    fprintf(stderr, "wchar_t* -> char* failed (size query): %lu\n", err);
-    return "";
-  }
-  
-  char *buf = (char*)malloc(needed);
-  if (!buf) {
-    fprintf(stderr, "malloc failed\n"); return "";
-  }
-
-  int written = WideCharToMultiByte(CP_UTF8, 0, wbuf, -1, buf, needed, NULL, NULL);
-  if (written == 0) {
-    DWORD err = GetLastError();
-    fprintf(stderr, "wchar_t* -> char* failed (convert): %lu\n", err);
-    return "";
-  } else {
-    printf("Converted (%d bytes): %s\n", written, buf);    
-  }
-  return buf;
+  /*
+    That's another Win32 idiom, lParam of WM_CREATE is a pointer to a CREATESTRUCT instance.
+    CREATESTRUCT contains all the info that was passed to CreateWindowExW when the parent window was created.
+    hInstance is the HISNTACE(instance-handle) o the application that created the parrent window.
+    CreateWindowExW(...) requires the HISTANCE of the module(every .exe or .dll gets an HINSTANCE/HMODULE) that owns the window class.
+  */
+  HWND hWndChild = CreateWindowExW(dwExStyle, lpClassName, lpWindowName,
+			      WS_CHILD | dwStyle,
+			      X, Y, nWidth, nHeight,
+			      hWndParent, hMenu, hInstance,
+			      lpParam
+			      );
+      
+  SetWindowTextW(hWndChild, wndTxt);
+  WNDPROC hWndChildOldProc = NULL;
+  if(newProc)
+    {
+      hWndChildOldProc = (WNDPROC)SetWindowLongPtrW(
+						    hWndChild,
+						    GWLP_WNDPROC,
+						    (LONG_PTR)newProc
+						    );
+    }
+  ShowWindow(hWndChild, SW_SHOW);
+  if(!UpdateWindow(hWndChild))
+    {
+      MessageBoxW(NULL, L"UpdateWindow failed!", L"Error", MB_OK);
+    }
+  return (WindowData){hWndChild, hWndChildOldProc};
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-  if(wcscmp(L"-debug_console", lpCmdLine) == 0)
+  if(wcscmp(WC_FLAG_DEBUG_CONSOLE, lpCmdLine) == 0)
     {
       create_console_instance();
     }
@@ -69,6 +56,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
   wc.lpszClassName = CLASS_NAME;
   wc.hCursor       = LoadCursor(NULL, IDC_ARROW);
   wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+  /*
+    a winapi trick, win32 expects the value 1..N to represent system color brushes,
+    the +1 is required because internally '0' means "no brush" and Windows offset system colors by 1.
+    The cast just tells the compiler, "trust me, this integer is a valid HBRUSH handle in this special case
+    Could have used CreateSolidBrush(RGB(255,255,255)) instead
+  */
 
   if(!RegisterClassExW(&wc)) {
     MessageBoxW(NULL, L"RegisterClassExW failed!", L"Error", MB_OK);
@@ -108,21 +101,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   switch (uMsg)
     {
     case WM_CREATE:
-      h_edit_calc_input = CreateWindowExW(0, L"EDIT", L"",
-					  WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
-					  10, 10, 260, 50,
-					  hwnd,
-					  (HMENU)IDC_DISPLAY,
-					  ((LPCREATESTRUCT)lParam)->hInstance,
-					  NULL
-					  );
-      
-      SetWindowTextW(h_edit_calc_input, L"");
-      old_edit_calc_proc = (WNDPROC)SetWindowLongPtrW(
-						      h_edit_calc_input,
-						      GWLP_WNDPROC,
-						      (LONG_PTR)EditSubclassWindowProc
-						      );
+      /*
+	That's another Win32 idiom, lParam of WM_CREATE os a pointer to a CREATESTRUCT instance.
+	CREATESTRUCT contains all the info that was passed to CreateWindowExW when the parent window was created.
+	hInstance is the HISNTACE(instance-handle) o the application that created the parrent window.
+	CreateWindowExW(...) requires the HISTANCE of the module(every .exe or .dll gets an HINSTANCE/HMODULE) that owns the window class.
+      */
+      display_wnd = CreateChildWnd(EditDisplaySubclassWindowProc,
+				   L"EDIT", L"", L"", 0,
+				   WS_VISIBLE | WS_BORDER | ES_LEFT,
+				   10, 10, 260, 50,
+				   hwnd,
+				   (HMENU)IDC_DISPLAY,
+				   ((LPCREATESTRUCT)lParam)->hInstance,
+				   NULL
+				   );
       break;
       
     case WM_DESTROY:
@@ -143,18 +136,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
       
     case WM_SIZE:
-      if(h_edit_calc_input) {
-	MoveWindow(h_edit_calc_input, 10, 10, LOWORD(lParam) - 20, 50, 1);
+      if(display_wnd.hwnd) {
+	MoveWindow(display_wnd.hwnd, 10, 10, LOWORD(lParam) - 20, 50, 1);
       }
       break;
     }
   return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-LRESULT CALLBACK EditSubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK EditDisplaySubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   switch(uMsg)
-    {      
+    {
     case WM_KEYDOWN:
       if(wParam == VK_RETURN) {
 	wchar_t wbuf[DISPLAY_BUFF_SIZE];
@@ -178,7 +171,7 @@ LRESULT CALLBACK EditSubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM w
 	print_tree_pyramid(root);
 	  
 	double res = eval_tree(root);
-	  
+
 	swprintf(wbuf, DISPLAY_BUFF_SIZE, L"%g", res);
 	SetWindowTextW(sub_class_hwnd, (LPWSTR)wbuf);
 	SetFocus(GetParent(sub_class_hwnd));
@@ -186,5 +179,8 @@ LRESULT CALLBACK EditSubclassWindowProc(HWND sub_class_hwnd, UINT uMsg, WPARAM w
       return 0;
       break;
     }
-  return CallWindowProcW(old_edit_calc_proc, sub_class_hwnd, uMsg,  wParam, lParam);
+  return CallWindowProcW(display_wnd.hWndOldProc, sub_class_hwnd, uMsg,  wParam, lParam);
 }
+
+
+

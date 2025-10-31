@@ -12,158 +12,135 @@ const char *TOKEN_TYPE_NAMES[] = {
   [TOKEN_ERR]      = "ERR"
 };
 
-
-
 LexerState* init_lexer(const char *expr)
 {
-  if(!expr)
+  if(!expr){
     return NULL;
+  }
   
-  LexerState *l = malloc(sizeof(LexerState));
-  if (!l)
+  LexerState *lexer_state = malloc(sizeof(LexerState));
+  if (!lexer_state){
     return NULL;
+  }
   
-  l->expr = expr;
-  l->pos = 0;
-  l->length = strlen(expr);
+  lexer_state->expr = expr;
+  lexer_state->pos = 0; 
+  lexer_state->length = strlen(expr);
   
-  return l;
+  return lexer_state;
 }
 
-char get_current(LexerState *l)
+char get_current(LexerState *lexer_state)
 {
-  return l->expr[l->pos];
+  return lexer_state->expr[lexer_state->pos];
 }
 
-void advance(LexerState *l)
+void advance(LexerState *lexer_state)
 {
-  if(!l) { return; }
-  if (l->pos < l->length) { l->pos++; }
+  if(!lexer_state){ return; }
+  if (lexer_state->pos < lexer_state->length) { lexer_state->pos++; }
 }
 
-void advance_offset(LexerState *l, size_t offset)
+void advance_offset(LexerState *lexer_state, size_t offset)
 {
   for(size_t i = 0; i < offset; i++) {
-      advance(l);
-      if(l->pos >= l->length)
+      advance(lexer_state);
+      if(lexer_state->pos >= lexer_state->length){
 	break;
+      }
     }
 }
 
-char peek_nonspace_char(LexerState *l, size_t offset)
+char peek_char(LexerState *lexer_state, size_t offset)
 {
-  size_t pos = l->pos + offset;
-  while (pos < l->length && isspace((unsigned char)l->expr[pos]))
-    pos++;
+  size_t pos = lexer_state->pos + offset;
+  if(pos >= lexer_state->length) {
+    return '\0';
+  }
+  return lexer_state->expr[pos];
+}
+
+CalcToken handle_alphabetical_identifiers(LexerState *lexer_state)
+{
+  char current_char = get_current(lexer_state);
+  char buffer[MAX_IDENT_LEN];
+  size_t len = 0;
+  while(isalpha((unsigned char)current_char) && len < MAX_IDENT_LEN - 1) {
+    buffer[len++] = current_char;
+    advance(lexer_state);
+    current_char = get_current(lexer_state);
+  }
+  buffer[len] = '\0';
+
+  if(f_exists(buffer)) {
+    //advance_offset(lexer_state, len - 1);
+    return create_function_token(buffer);
+  }
   
-  return pos < l->length ? l->expr[pos] : '\0';
+  //advance(lexer_state);
+  return create_variable_token(buffer);
 }
 
-void skip_space(LexerState *l)
+CalcToken handle_numeric_identifiers(LexerState *lexer_state)
 {
-  if(!l)
-    return;
-  while(isspace(l->expr[l->pos]) && l->pos < l->length)
-    l->pos++;
-}
+  char buffer[MAX_IDENT_LEN];
+  int len = 0;
 
-char* char_to_string(char c)
-{
-  char *s = malloc(2);
-  if (!s)
-    return NULL;
-  s[0] = c;
-  s[1] = '\0';
-  return s;
-}
-
-
-CalcToken get_next_token(LexerState *l)
-{
-  CalcToken token = {0}; //initialize
-
-  if(!l || l->pos >= l->length) {
-      token.type = TOKEN_END;
-      return token;
-    }
+  char current_char = get_current(lexer_state);
   
-  skip_space(l);
-  
-  char current_char = get_current(l);
+  while ((isdigit((unsigned char)current_char) || current_char == DOT) && len < MAX_IDENT_LEN - 1) {
+    buffer[len++] = current_char;
+    advance(lexer_state);
+    current_char = lexer_state->expr[lexer_state->pos];
+  }
+  buffer[len] = '\0';
 
-  //Handle function names and variables
-  if(isalpha(current_char)) {
-      char buffer[MAX_IDENT_LEN];
-      size_t len = 0;
-      while(isalpha((unsigned char)current_char) && len < MAX_IDENT_LEN - 1) {
-	  buffer[len++] = current_char;
-	  current_char = peek_nonspace_char(l, len);
-	}
-      buffer[len] = '\0';
+  return create_numeric_token(atof(buffer));
+}
 
-      if(f_exists(buffer)) {
-	  advance_offset(l, len);
-	  token.type = TOKEN_FUNCTION;
-	  token.value.text = strdup(buffer);
-	  return token;
-	}
-      
-      current_char = get_current(l);
-      token.type = TOKEN_VARIABLE;
-      token.value.text = char_to_string(current_char);
-      advance(l);
-      return token;
-    }
-
-  if (isdigit((unsigned char)current_char) || current_char == DOT) {
-      char buffer[MAX_IDENT_LEN];
-      int len = 0;
-
-      while ((isdigit((unsigned char)current_char) || current_char == DOT) && len < MAX_IDENT_LEN - 1) {
-	  buffer[len++] = current_char;
-	  advance(l);
-	  current_char = l->expr[l->pos];
-	}
-      buffer[len] = '\0';
-
-      token.type = TOKEN_NUMBER;
-      token.value.number = atof(buffer);
-      return token;
-    }
-
+CalcToken handle_symbols(LexerState *lexer_state)
+{
+  char current_char = get_current(lexer_state);
   char *text = char_to_string(current_char);
-  
-  //Handle parentheses
+
   if(current_char == LPAREN) { 
-      token.type = TOKEN_LPAREN;
-      token.value.text = text;
-      
-      advance(l);
-      return token;
+      advance(lexer_state);
+      return create_grouping_token(TOKEN_LPAREN, text);
     }
-  if(current_char == RPAREN) { 
-      token.type = TOKEN_RPAREN;
-      token.value.text = text;
-      
-      advance(l);
-      return token;
-    }
+  if(current_char == RPAREN) {
+    advance(lexer_state);
+    return create_grouping_token(TOKEN_RPAREN, text);
+  }
+  
   if(current_char == COMMA) {
-    token.type = TOKEN_COMMA;
-    token.value.text = text;
-    advance(l);
-    return token;
+    advance(lexer_state);
+    return create_separator_token(text);
   }
   if(current_char == ADD || current_char == SUB ||current_char == MULT ||
      current_char == DIV || current_char == POW) {
-      token.type = TOKEN_OPERATOR;
-      token.value.text = text;
-      advance(l);
-      return token;
+      advance(lexer_state);
+      return create_operator_token(text);
     }
+}
+
+CalcToken get_next_token(LexerState *lexer_state)
+{
+  if(lexer_state == NULL || lexer_state->pos >= lexer_state->length) {
+    return create_end_expr_token();
+  }
   
-  advance(l);
-  return token;
+  char current_char = get_current(lexer_state);
+
+  //Handle function names and variables
+  if(isalpha(current_char)) {
+    return handle_alphabetical_identifiers(lexer_state);
+  }
+
+  if (isdigit((unsigned char)current_char) || current_char == DOT) {
+    return handle_numeric_identifiers(lexer_state);
+  }
+  
+  return handle_symbols(lexer_state);
 }
 
 
@@ -189,7 +166,8 @@ void token_to_string(const CalcToken *t, char *buf, size_t size)
 
 CalcTokenNode *lex_expr(const char *math_expression)
 {
-  LexerState *t = init_lexer(math_expression);
+  const char *trimmed_math_expression = trim_char(math_expression, strlen(math_expression), ' ');
+  LexerState *t = init_lexer(trimmed_math_expression);
   CalcToken tok = get_next_token(t);
   
   CalcTokenNode *root = NULL;

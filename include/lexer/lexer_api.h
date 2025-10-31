@@ -7,7 +7,8 @@
 #include <ctype.h>
 
 #include "lexer_state_struct.h"
-#include "token_struct.h"
+#include "token_utils.h"
+#include "lexer_utils.h"
 #include "builtins.h"
 
 //Intializes a new tokenizer for a new expression
@@ -21,10 +22,13 @@ void advance(LexerState *l);
 void advance_offset(LexerState *l, size_t offset);
 
 //Peeks the char with the specified offset without taking in acount the white spaces
-char peek_nonspace_char(LexerState *l, size_t offset);
+char peek_char(LexerState *l, size_t offset);
 
-//Skips all heading whitespace
-void skip_space(LexerState *l);
+CalcToken handle_alphabetical_identifiers(LexerState *lexer_state);
+
+CalcToken handle_numeric_identifiers(LexerState *lexer_state);
+
+CalcToken handle_symbols(LexerState *lexer_state);
 
 //Converts a single char into a null terminated string(In favour of the token value member)
 char* char_to_string(char c);
