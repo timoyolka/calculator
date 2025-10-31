@@ -12,6 +12,12 @@
 
 #define INDENT_STEP 4
 
+//Parses functions
+ExprNode* parse_function_call(ParserState *p, const char *fname);
+
+//Parses expression in ()
+ExprNode* parse_parenthesized_expression(ParserState *p);
+
 //Parses binary + or -
 ExprNode* parse_expression(ParserState *p);
 

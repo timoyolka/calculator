@@ -39,30 +39,38 @@ void print_node_value(const ExprNode *node)
         return;
     }
     switch (node->type) {
-    case NODE_NUMBER:
-      if(floor(node->value.number) == node->value.number)
-        printf("%.0f", node->value.number);
-      else
+    case NODE_NUMBER: {
+      if(floor(node->value.number) == node->value.number) {
+        printf("%.0f", node->value.number);	
+      } else {
 	printf("%g", node->value.number);
+      }
       break;
-    case NODE_OPERATION:
-        printf("%c", node->value.operator);
-        break;
-    case NODE_UNARY:
+    }
+    case NODE_OPERATION: {
       printf("%c", node->value.operator);
       break;
-    case NODE_VARIABLE:
+    }
+    case NODE_UNARY: {
+      printf("%c", node->value.operator);
+      break;
+    }
+    case NODE_VARIABLE: {
       printf("%s", node->value.name);
       break;
-    case NODE_FUNCTION:
-        printf("%s", node->value.name);
-	break;
-    case NODE_ERROR:
-      //printf("%s", node->value.error);
+    }
+    case NODE_FUNCTION: {
+      printf("%s", node->value.name);
+      break;
+    }
+    case NODE_ERROR: {
+      //printf("%s", node->value.error); 
       printf("e_node");
-        break;
-    default:
-        printf("?");
+      break;
+    }
+    default: {
+      printf("?");
+    }
     }
 }
 
